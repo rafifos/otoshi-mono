@@ -1,0 +1,147 @@
+# +----------------+
+# + Version 32.0.1 +
+# +----------------+
+[buildPlans.IosevkaCustom]
+family = "Iosevka Custom"
+spacing = "normal"
+serifs = "sans"
+noCvSs = false
+exportGlyphNames = true
+
+[buildPlans.IosevkaCustom.variants.design]
+one = "base-long-top-serif"
+two = "straight-neck-serifless"
+four = "open-non-crossing-serifless"
+five = "upright-flat-serifless"
+six = "open-contour"
+eight = "crossing-asymmetric"
+nine = "open-contour"
+capital-i = "serifless"
+capital-r = "standing-serifless"
+f = "flat-hook-serifless"
+t = "bent-hook-short-neck2"
+eszet = "sulzbacher-tailed"
+lower-mu = "tailed"
+asterisk = "hex-high"
+brace = "straight"
+guillemet = "straight"
+number-sign = "slanted"
+at = "fourfold"
+percent = "rings-continuous-slash"
+bar = "force-upright"
+micro-sign = "tailed-serifless"
+lig-neq = "more-slanted"
+lig-plus-chain = "with-notch"
+lig-double-arrow-bar = "with-notch"
+lig-single-arrow-bar = "with-notch"
+
+[buildPlans.IosevkaCustom.widths.Normal]
+shape = 500
+menu = 5
+css = "normal"
+
+[buildPlans.IosevkaCustom.widths.Extended]
+shape = 600
+menu = 7
+css = "expanded"
+
+[buildPlans.IosevkaCustom.widths.Condensed]
+shape = 416
+menu = 3
+css = "condensed"
+
+[buildPlans.IosevkaCustom.widths.SemiCondensed]
+shape = 456
+menu = 4
+css = "semi-condensed"
+
+[buildPlans.IosevkaCustom.widths.SemiExtended]
+shape = 548
+menu = 6
+css = "semi-expanded"
+
+[buildPlans.IosevkaCustom.widths.ExtraExtended]
+shape = 658
+menu = 8
+css = "extra-expanded"
+
+[buildPlans.IosevkaCustom.widths.UltraExtended]
+shape = 720
+menu = 9
+css = "ultra-expanded"
+
+[collectPlans.IosevkaCustom]
+from = ["IosevkaCustom"]
+
+[buildPlans.IosevkaTermCustom]
+family = "Iosevka Term Custom"
+spacing = "term"
+serifs = "sans"
+noCvSs = false
+exportGlyphNames = true
+noLigation = true
+
+[buildPlans.IosevkaTermCustom.variants.design]
+one = "base-long-top-serif"
+two = "straight-neck-serifless"
+four = "open-non-crossing-serifless"
+five = "upright-flat-serifless"
+six = "open-contour"
+eight = "crossing-asymmetric"
+nine = "open-contour"
+capital-i = "serifless"
+capital-r = "standing-serifless"
+f = "flat-hook-serifless"
+t = "bent-hook-short-neck2"
+eszet = "sulzbacher-tailed"
+lower-mu = "tailed"
+asterisk = "hex-high"
+brace = "straight"
+guillemet = "straight"
+number-sign = "slanted"
+at = "fourfold"
+percent = "rings-continuous-slash"
+bar = "force-upright"
+micro-sign = "tailed-serifless"
+lig-neq = "more-slanted"
+lig-plus-chain = "with-notch"
+lig-double-arrow-bar = "with-notch"
+lig-single-arrow-bar = "with-notch"
+
+[buildPlans.IosevkaTermCustom.widths.Normal]
+shape = 500
+menu = 5
+css = "normal"
+
+[buildPlans.IosevkaTermCustom.widths.Extended]
+shape = 600
+menu = 7
+css = "expanded"
+
+[buildPlans.IosevkaTermCustom.widths.Condensed]
+shape = 416
+menu = 3
+css = "condensed"
+
+[buildPlans.IosevkaTermCustom.widths.SemiCondensed]
+shape = 456
+menu = 4
+css = "semi-condensed"
+
+[buildPlans.IosevkaTermCustom.widths.SemiExtended]
+shape = 548
+menu = 6
+css = "semi-expanded"
+
+[buildPlans.IosevkaTermCustom.widths.ExtraExtended]
+shape = 658
+menu = 8
+css = "extra-expanded"
+
+[buildPlans.IosevkaTermCustom.widths.UltraExtended]
+shape = 720
+menu = 9
+css = "ultra-expanded"
+
+[collectPlans.IosevkaTermCustom]
+from = ["IosevkaTermCustom"]
