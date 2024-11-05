@@ -1,0 +1,48 @@
+name: Font Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      fontFamily:
+        description: 'Font Family to build'
+        required: true
+        default: 'Iosevka Custom'
+        type: choice
+        options:
+        - Iosevka Custom
+        - Iosevka Term Custom
+
+jobs:
+  build:
+    name: Build ${{ inputs.fontFamily }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: iosevka
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install ttfautohint
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ttfautohint
+
+      - name: Build ${{ inputs.fontFamily }}
+        shell: bash
+        working-directory: iosevka
+        run: |
+          npm ci
+          npm run build -- contents::${{ inputs.fontFamily }}
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ${{ inputs.fontFamily }}
+          path: iosevka/dist
+          include-hidden-files: true
