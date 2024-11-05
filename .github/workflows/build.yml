@@ -18,12 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          path: iosevka
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Install ttfautohint
-        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ttfautohint
@@ -34,7 +32,6 @@ jobs:
 
       - name: Get npm cache directory
         id: npm-cache-dir
-        shell: bash
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
       - name: Cache npm dependencies
@@ -46,16 +43,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build ${{ inputs.fontFamily }}
-        shell: bash
-        working-directory: iosevka
-        run: |
-          npm ci
-          npm run build -- contents::${{ inputs.fontFamily }}
+        run: npm run build -- contents::${{ inputs.fontFamily }}
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
           name: ${{ inputs.fontFamily }}
-          path: iosevka/dist
+          path: dist/
           include-hidden-files: true
