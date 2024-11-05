@@ -6,11 +6,11 @@ on:
       fontFamily:
         description: 'Font Family to build'
         required: true
-        default: 'Iosevka Custom'
+        default: 'IosevkaCustom'
         type: choice
         options:
-        - Iosevka Custom
-        - Iosevka Term Custom
+        - IosevkaCustom
+        - IosevkaTermCustom
 
 jobs:
   build:
