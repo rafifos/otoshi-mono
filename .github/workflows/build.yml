@@ -9,8 +9,8 @@ on:
         default: 'Iosevka Custom'
         type: choice
         options:
-        - IosevkaCustom
-        - IosevkaTermCustom
+        - Iosevka Custom
+        - Iosevka Term Custom
 
 jobs:
   build:
@@ -22,16 +22,29 @@ jobs:
         with:
           path: iosevka
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
       - name: Install ttfautohint
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ttfautohint
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Build ${{ inputs.fontFamily }}
         shell: bash
