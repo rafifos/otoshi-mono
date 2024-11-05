@@ -17,11 +17,9 @@ six = "open-contour"
 eight = "crossing-asymmetric"
 nine = "open-contour"
 capital-i = "serifless"
-capital-r = "standing-serifless"
+capital-r = "curly-serifless"
 f = "flat-hook-serifless"
 t = "bent-hook-short-neck2"
-eszet = "sulzbacher-tailed"
-lower-mu = "tailed"
 asterisk = "hex-high"
 brace = "straight"
 guillemet = "straight"
@@ -29,7 +27,6 @@ number-sign = "slanted"
 at = "fourfold"
 percent = "rings-continuous-slash"
 bar = "force-upright"
-micro-sign = "tailed-serifless"
 lig-neq = "more-slanted"
 lig-plus-chain = "with-notch"
 lig-double-arrow-bar = "with-notch"
@@ -70,9 +67,6 @@ shape = 720
 menu = 9
 css = "ultra-expanded"
 
-[collectPlans.IosevkaCustom]
-from = ["IosevkaCustom"]
-
 [buildPlans.IosevkaTermCustom]
 family = "Iosevka Term Custom"
 spacing = "term"
@@ -90,11 +84,9 @@ six = "open-contour"
 eight = "crossing-asymmetric"
 nine = "open-contour"
 capital-i = "serifless"
-capital-r = "standing-serifless"
+capital-r = "curly-serifless"
 f = "flat-hook-serifless"
 t = "bent-hook-short-neck2"
-eszet = "sulzbacher-tailed"
-lower-mu = "tailed"
 asterisk = "hex-high"
 brace = "straight"
 guillemet = "straight"
@@ -102,7 +94,6 @@ number-sign = "slanted"
 at = "fourfold"
 percent = "rings-continuous-slash"
 bar = "force-upright"
-micro-sign = "tailed-serifless"
 lig-neq = "more-slanted"
 lig-plus-chain = "with-notch"
 lig-double-arrow-bar = "with-notch"
@@ -142,6 +133,3 @@ css = "extra-expanded"
 shape = 720
 menu = 9
 css = "ultra-expanded"
-
-[collectPlans.IosevkaTermCustom]
-from = ["IosevkaTermCustom"]
