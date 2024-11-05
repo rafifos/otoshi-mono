@@ -9,8 +9,8 @@ on:
         default: 'Iosevka Custom'
         type: choice
         options:
-        - Iosevka Custom
-        - Iosevka Term Custom
+        - IosevkaCustom
+        - IosevkaTermCustom
 
 jobs:
   build:
