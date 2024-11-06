@@ -2,19 +2,16 @@ name: Font Build
 
 on:
   workflow_dispatch:
-    inputs:
-      fontFamily:
-        description: 'Font Family to build'
-        required: true
-        default: 'IosevkaCustom'
-        type: choice
-        options:
-        - IosevkaCustom
-        - IosevkaTermCustom
 
 jobs:
   build:
-    name: Build ${{ inputs.fontFamily }}
+    strategy:
+      matrix:
+        fontFamily: 
+          - IosevkaCustom
+          - IosevkaTermCustom
+
+    name: Build ${{ matrix.fontFamily }}
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +27,10 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: Get Font version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+
       - name: Get npm cache directory
         id: npm-cache-dir
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
@@ -43,15 +44,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            packages/*/lib
+            packages/font-glyphs/src/**/*.mjs
+            packages/font-otl/src/**/*.mjs
+          key: artifacts-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            artifacts-${{ runner.os }}
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build ${{ inputs.fontFamily }}
-        run: npm run build -- contents::${{ inputs.fontFamily }}
+      - name: Build ${{ matrix.fontFamily }}
+        run: npm run build -- contents::${{ matrix.fontFamily }}
 
-      - name: Upload a Build Artifact
+      - name: Upload Fonts
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: ${{ inputs.fontFamily }}
+          name: ${{ matrix.fontFamily }}_${{ steps.package-version.outputs.current-version}}
           path: dist/
           include-hidden-files: true
