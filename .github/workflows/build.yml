@@ -52,7 +52,7 @@ jobs:
             packages/*/lib
             packages/font-glyphs/src/**/*.mjs
             packages/font-otl/src/**/*.mjs
-          key: artifacts-${{ runner.os }}-${{ github.run_id }}
+          key: artifacts-${{ runner.os }}-${{ github.run_id }}-${{ matrix.fontFamily }}
           restore-keys: |
             artifacts-${{ runner.os }}
 
