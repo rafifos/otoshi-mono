@@ -95,4 +95,4 @@ jobs:
           tag_name: v${{ steps.package-version.outputs.current-version }}
           name: Release v${{ steps.package-version.outputs.current-version }}
           body: "Automated release of Otoshi Mono"
-          files: artifacts/*
+          files: otoshi-mono/artifacts/*
