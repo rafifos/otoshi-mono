@@ -8,8 +8,8 @@ jobs:
     strategy:
       matrix:
         fontFamily: 
-          - otoshi-mono
-          - otoshi-term
+          - OtoshiMono
+          - OtoshiTerm
 
     name: Build ${{ matrix.fontFamily }}
     runs-on: ubuntu-latest
