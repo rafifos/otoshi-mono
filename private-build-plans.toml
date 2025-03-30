@@ -1,14 +1,14 @@
 # +----------------+
-# + Version 32.0.1 +
+# + Version 33.2.0 +
 # +----------------+
-[buildPlans.IosevkaCustom]
-family = "Iosevka Custom"
+[buildPlans.OtoshiMono]
+family = "Otoshi Mono"
 spacing = "normal"
 serifs = "sans"
 noCvSs = false
 exportGlyphNames = true
 
-[buildPlans.IosevkaCustom.variants.design]
+[buildPlans.OtoshiMono.variants.design]
 one = "base-long-top-serif"
 two = "straight-neck-serifless"
 four = "open-non-crossing-serifless"
@@ -31,50 +31,50 @@ lig-plus-chain = "with-notch"
 lig-double-arrow-bar = "with-notch"
 lig-single-arrow-bar = "with-notch"
 
-[buildPlans.IosevkaCustom.widths.Normal]
+[buildPlans.OtoshiMono.widths.Normal]
 shape = 500
 menu = 5
 css = "normal"
 
-[buildPlans.IosevkaCustom.widths.Extended]
+[buildPlans.OtoshiMono.widths.Extended]
 shape = 600
 menu = 7
 css = "expanded"
 
-[buildPlans.IosevkaCustom.widths.Condensed]
+[buildPlans.OtoshiMono.widths.Condensed]
 shape = 416
 menu = 3
 css = "condensed"
 
-[buildPlans.IosevkaCustom.widths.SemiCondensed]
+[buildPlans.OtoshiMono.widths.SemiCondensed]
 shape = 456
 menu = 4
 css = "semi-condensed"
 
-[buildPlans.IosevkaCustom.widths.SemiExtended]
+[buildPlans.OtoshiMono.widths.SemiExtended]
 shape = 548
 menu = 6
 css = "semi-expanded"
 
-[buildPlans.IosevkaCustom.widths.ExtraExtended]
+[buildPlans.OtoshiMono.widths.ExtraExtended]
 shape = 658
 menu = 8
 css = "extra-expanded"
 
-[buildPlans.IosevkaCustom.widths.UltraExtended]
+[buildPlans.OtoshiMono.widths.UltraExtended]
 shape = 720
 menu = 9
 css = "ultra-expanded"
 
-[buildPlans.IosevkaTermCustom]
-family = "Iosevka Term Custom"
+[buildPlans.OtoshiTerm]
+family = "Otoshi Term"
 spacing = "term"
 serifs = "sans"
 noCvSs = false
 exportGlyphNames = true
 noLigation = true
 
-[buildPlans.IosevkaTermCustom.variants.design]
+[buildPlans.OtoshiTerm.variants.design]
 one = "base-long-top-serif"
 two = "straight-neck-serifless"
 four = "open-non-crossing-serifless"
@@ -97,37 +97,37 @@ lig-plus-chain = "with-notch"
 lig-double-arrow-bar = "with-notch"
 lig-single-arrow-bar = "with-notch"
 
-[buildPlans.IosevkaTermCustom.widths.Normal]
+[buildPlans.OtoshiTerm.widths.Normal]
 shape = 500
 menu = 5
 css = "normal"
 
-[buildPlans.IosevkaTermCustom.widths.Extended]
+[buildPlans.OtoshiTerm.widths.Extended]
 shape = 600
 menu = 7
 css = "expanded"
 
-[buildPlans.IosevkaTermCustom.widths.Condensed]
+[buildPlans.OtoshiTerm.widths.Condensed]
 shape = 416
 menu = 3
 css = "condensed"
 
-[buildPlans.IosevkaTermCustom.widths.SemiCondensed]
+[buildPlans.OtoshiTerm.widths.SemiCondensed]
 shape = 456
 menu = 4
 css = "semi-condensed"
 
-[buildPlans.IosevkaTermCustom.widths.SemiExtended]
+[buildPlans.OtoshiTerm.widths.SemiExtended]
 shape = 548
 menu = 6
 css = "semi-expanded"
 
-[buildPlans.IosevkaTermCustom.widths.ExtraExtended]
+[buildPlans.OtoshiTerm.widths.ExtraExtended]
 shape = 658
 menu = 8
 css = "extra-expanded"
 
-[buildPlans.IosevkaTermCustom.widths.UltraExtended]
+[buildPlans.OtoshiTerm.widths.UltraExtended]
 shape = 720
 menu = 9
 css = "ultra-expanded"
