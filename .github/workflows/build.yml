@@ -89,16 +89,10 @@ jobs:
         with:
           path: artifacts
 
-      - name: Collect Artifact Files
-        run: |
-          mkdir -p release_assets
-          find artifacts -name '*.zip' -exec cp {} release_assets/ \;
-
       - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.package-version.outputs.current-version }}
           name: Release v${{ steps.package-version.outputs.current-version }}
           body: "Automated release of Otoshi Mono"
-          files: release_assets/*.zip
-          update: true
+          files: artifacts/*
