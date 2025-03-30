@@ -23,11 +23,13 @@ glyph-block Recursive-Build : begin
 		if forceUpright : begin
 			forkedPara.slopeAngle  = 0
 		if mono : begin
-			forkedPara.diversityM  = 1
+			forkedPara.advanceScaleMM = 1
+			forkedPara.advanceScaleM  = 1
+			forkedPara.advanceScaleT  = 1
 		if mono2 : begin
-			forkedPara.diversityF  = 1
-			forkedPara.diversityI  = 1
-			forkedPara.diversityII = 1
+			forkedPara.advanceScaleF  = 1
+			forkedPara.advanceScaleI  = 1
+			forkedPara.advanceScaleII = 1
 
 		return forkedPara
 
@@ -47,11 +49,13 @@ glyph-block Recursive-Build : begin
 		forkedPara.accentWidth = AccentWidth * p
 		forkedPara.jut = Jut * p
 		forkedPara.longjut = LongJut * p
-		forkedPara.diversityM = 1
+		forkedPara.advanceScaleMM = 1
+		forkedPara.advanceScaleM  = 1
+		forkedPara.advanceScaleT  = 1
 		if fMono : begin
-			forkedPara.diversityF  = 1
-			forkedPara.diversityI  = 1
-			forkedPara.diversityII = 1
+			forkedPara.advanceScaleF  = 1
+			forkedPara.advanceScaleI  = 1
+			forkedPara.advanceScaleII = 1
 		#forkedPara.hookx = HookX * p
 		return : Fork glyphs forkedPara
 
@@ -73,7 +77,7 @@ glyph-block Recursive-Build-ParaTfm : begin
 	define ForkTfm : namespace
 		define [boldGrade g] : begin
 			local pGrade : (900 - g) / 100
-			return : 900 - 100 * (2 / 25) * pGrade * pGrade
+			return : 900 - 100 * (2 / 25) * (pGrade ** 2)
 
 		export : define [Bold   a]     : begin [set a.shape.weight : boldGrade a.shape.weight]
 		export : define [Italic a]     : begin

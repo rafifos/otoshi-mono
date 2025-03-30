@@ -38,7 +38,6 @@ export : define decompOverrides : object
 	# Latvians use comma instead of cedillas in several letters.
 	# Record them as custom decomposition.
 	0x122  { 'G' 'commaBelow' }
-	0x123  { 'g' 'turnCommaAbove' }
 	0x136  { 'K' 'commaBelow' }
 	0x137  { 'k' 'commaBelow' }
 	0x13B  { 'L' 'commaBelow' }
@@ -153,7 +152,7 @@ export : define decompOverrides : object
 	0x1D6C { 'b' 'tildeOverOnExension' }
 	0x1D6D { 'd' 'tildeOverOnExension' }
 	0x1D6E { 'f' 'tildeOver' }
-	0x1D6F { 'm' 'tildeStrikeDivM' }
+	0x1D6F { 'm' 'tildeStrikeDivMM' }
 	0x1D70 { 'n' 'tildeStrike' }
 	0x1D71 { 'p' 'tildeOverOnExension' }
 	0x1D74 { 's' 'tildeStrike' }
@@ -212,7 +211,7 @@ export : define decompOverrides : object
 	0xA7CC { 'S' 'longSlash' }
 	0xA7CD { 's' 'shortSlash' }
 
-	0xAB30 { 'scripta'   'hStrike' }
+	0xAB30 { 'aScript'   'hStrike' }
 	0xAB3E { 'frak/o'    'shortSlash' }
 	0xAB3F { 'turnc'     'shortSlash' }
 	0xAB4F { 'uShortLeg' 'hStrike' }
