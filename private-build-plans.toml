@@ -7,6 +7,7 @@ spacing = "normal"
 serifs = "sans"
 noCvSs = false
 exportGlyphNames = true
+buildTextureFeature = true
 
 [buildPlans.OtoshiMono.variants.design]
 one = "base-long-top-serif"
