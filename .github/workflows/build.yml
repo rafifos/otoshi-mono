@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        fontFamily: 
+        fontFamily:
           - OtoshiMono
           - OtoshiTerm
 
@@ -62,11 +62,23 @@ jobs:
       - name: Build ${{ matrix.fontFamily }}
         run: npm run build -- contents::${{ matrix.fontFamily }}
 
-      - name: Upload Artifacts
+      - name: Patch fonts with NerdFonts
+        run: |
+          mkdir -p dist-nerdfont
+          docker run --rm -v "$PWD/dist:/in:Z" -v "$PWD/dist-nerdfont:/out:Z" nerdfonts/patcher --complete --careful /in
+
+      - name: Upload Original Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.fontFamily }}_${{ steps.package-version.outputs.current-version}}
           path: dist/
+          include-hidden-files: true
+
+      - name: Upload NerdFonts-patched Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.fontFamily }}_nerdfont_${{ steps.package-version.outputs.current-version}}
+          path: dist-nerdfont/
           include-hidden-files: true
 
   release:
