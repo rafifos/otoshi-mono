@@ -13,12 +13,14 @@ glyph-block Letter-Greek-Phi : begin
 
 	define [VarPhiRing fFlatTB df y2 y3 ada adb] : glyph-proc
 		include : VBar.m df.middle y2 y3 df.mvs
+		local l : mix df.leftSB 0 : if fFlatTB (0.75 * (df.adws % 0.5)) 0
+		local r : df.width - l
 		include : if fFlatTB
-			OShapeFlatTB y3 y2 df.leftSB df.rightSB df.mvs ada adb : Math.max
-				(df.rightSB - df.leftSB) - (y3 - y2)
-				(df.rightSB - df.leftSB) * 0.25
+			OShapeFlatTB y3 y2 l r df.mvs ada adb : Math.max
+				(r - l) - (y3 - y2)
+				(r - l) * 0.25
 				HSwToV df.mvs
-			OShape y3 y2 df.leftSB df.rightSB df.mvs ada adb
+			OShape y3 y2 l r df.mvs ada adb
 
 	define [CyrlEfSplitRing fFlatTB df y2 y3 ada adb] : glyph-proc
 		include : VBar.m df.middle y2 y3 df.mvs
@@ -60,10 +62,10 @@ glyph-block Letter-Greek-Phi : begin
 		include : VBar.m df.middle (y3 - HalfStroke) y4 sw
 
 	define [CursiveBar df y1 y2 y3 y4 sw] : glyph-proc
-		local dfHook : DivFrame para.advanceScaleF
+		local dfHook : DivFrame : mix 1 (1 / df.adws) 0.5
 		local hd : FlatHookDepth dfHook
 
-		local m : mix 1 para.advanceScaleF 1.5
+		local m : mix 1 (1 / df.adws) 0.75
 
 		local xCrossLeft  : df.middle - dfHook.middle + dfHook.leftSB * m
 		local xCrossRight : df.middle + dfHook.middle - dfHook.leftSB * m
@@ -86,10 +88,10 @@ glyph-block Letter-Greek-Phi : begin
 			curl xBarRight (y2 - O)
 
 	define [DiagonalTailCursiveBar df y1 y2 y3 y4 sw] : glyph-proc
-		local dfHook : DivFrame para.advanceScaleF
+		local dfHook : DivFrame : mix 1 (1 / df.adws) 0.5
 		local hd : FlatHookDepth dfHook
 
-		local m : mix 1 para.advanceScaleF 1.5
+		local m : mix 1 (1 / df.adws) 0.75
 
 		local xCrossRight : df.middle + dfHook.middle - dfHook.leftSB * m
 		local xBarLeft    : df.middle - [HSwToV : 0.5 * sw]
@@ -106,7 +108,7 @@ glyph-block Letter-Greek-Phi : begin
 			DiagTail.L df.middle y1 [DiagTail.StdDepth dfHook sw] sw
 
 	define [MtSerif df y sw] : tagged 'serifMT' : HSerif.lt df.middle y Jut sw
-	define [MbSerif df y sw] : tagged 'serifMB' : HSerif.mb df.middle y Jut sw
+	define [MbSerif df y sw] : tagged 'serifMB' : HSerif.mb df.middle y MidJutCenter sw
 
 	glyph-block-export yCapitalPhiBowlBot yCapitalPhiBowlTop
 	define [yCapitalPhiBowlBot top slab] : mix [if slab Stroke 0] [if slab (top - Stroke) top] 0.125
@@ -119,8 +121,8 @@ glyph-block Letter-Greek-Phi : begin
 		include : StraightBar df 0 y2 y3 CAP
 
 		if SLAB : begin
-			include : tagged 'serifMT' : HSerif.mt df.middle CAP MidJutSide
-			include : tagged 'serifMB' : HSerif.mb df.middle 0   MidJutSide
+			include : tagged 'serifMT' : HSerif.mt df.middle CAP MidJutCenter
+			include : tagged 'serifMB' : HSerif.mb df.middle 0   MidJutCenter
 
 	create-glyph 'grek/Phi' 0x3A6 : glyph-proc
 		local df : include : DivFrame para.advanceScaleM 3
@@ -148,8 +150,8 @@ glyph-block Letter-Greek-Phi : begin
 		include : StraightBar df bot 0 CAP top
 
 		if SLAB : begin
-			include : tagged 'serifMT' : HSerif.mt df.middle top MidJutSide
-			include : tagged 'serifMB' : HSerif.mb df.middle bot MidJutSide
+			include : tagged 'serifMT' : HSerif.mt df.middle top MidJutCenter
+			include : tagged 'serifMB' : HSerif.mb df.middle bot MidJutCenter
 
 	create-glyph 'taillessphi' 0x2C77 : glyph-proc
 		local df : include : DivFrame para.advanceScaleM 3
@@ -182,8 +184,8 @@ glyph-block Letter-Greek-Phi : begin
 		include [refer-glyph 'grek/varphi'] AS_BASE ALSO_METRICS
 
 		if SLAB : begin
-			include : tagged 'serifMT' : HSerif.mt df.middle Ascender  Jut
-			include : tagged 'serifMB' : HSerif.mb df.middle Descender Jut
+			include : tagged 'serifMT' : HSerif.mt df.middle Ascender  MidJutCenter
+			include : tagged 'serifMB' : HSerif.mb df.middle Descender MidJutCenter
 
 	define CyrlLowerEfConfig : SuffixCfg.weave
 		object # bowl
