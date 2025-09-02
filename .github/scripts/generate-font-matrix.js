@@ -14,18 +14,12 @@ function generateFontMatrix(buildMode = 'complete') {
 
         // Configure build mode
         switch (buildMode) {
-            case 'quick':
-                // Quick build: Core families only
-                familyFilter = ['OtoshiMono', 'OtoshiTerm'];
-                console.log('Build mode: Quick (core families only)');
-                break;
-            
             case 'single-family':
                 // Single family build: OtoshiMono only
                 familyFilter = ['OtoshiMono'];
                 console.log('Build mode: Single Family (OtoshiMono only)');
                 break;
-            
+
             case 'complete':
             default:
                 // Complete build: All families
@@ -56,19 +50,17 @@ function generateFontMatrix(buildMode = 'complete') {
 
         console.log(`Font build: ${familyTargets.length} families scheduled`);
 
-        // Create build batches for parallel execution
-        const maxBatches = Math.min(8, Math.max(1, familyTargets.length));
-        const batchSize = Math.ceil(familyTargets.length / maxBatches);
+        // Create build batches for parallel execution - one batch per family
         const batches = [];
 
-        for (let i = 0; i < familyTargets.length; i += batchSize) {
+        for (const familyTarget of familyTargets) {
             batches.push({
-                batchId: Math.floor(i / batchSize) + 1,
-                families: familyTargets.slice(i, i + batchSize)
+                batchId: familyTarget.family,
+                families: [familyTarget]
             });
         }
 
-        console.log(`Parallel execution: ${batches.length} batch(es) with ${batchSize} family per batch`);
+        console.log(`Parallel execution: ${batches.length} batch(es) with 1 family per batch`);
 
         const families = familyTargets.map(f => f.family);
         console.log(`families=${JSON.stringify(families)}`);
@@ -78,7 +70,7 @@ function generateFontMatrix(buildMode = 'complete') {
         fs.writeFileSync('font-batches.json', JSON.stringify(batches, null, 2));
         fs.writeFileSync('font-matrix.json', JSON.stringify(familyTargets, null, 2));
 
-        return { families, batches: batches.map(b => b.batchId), familyTargets, batches };
+        return { families, batches: batches.map(b => b.batchId), familyTargets, fullBatches: batches };
 
     } catch (error) {
         console.error('Matrix generation failed:', error.message);
