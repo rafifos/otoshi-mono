@@ -11,26 +11,6 @@ on:
         options:
         - complete
         - single-family
-      use_persistent_cache:
-        description: 'Use persistent cache if available'
-        required: false
-        default: true
-        type: boolean
-      save_cache:
-        description: 'Save build cache for future builds'
-        required: false
-        default: false
-        type: boolean
-  schedule:
-    # Save build cache weekly on Sundays at 2 AM UTC
-    - cron: '0 2 * * 0'
-  push:
-    branches: [ main ]
-    paths:
-      - 'packages/**'
-      - 'verdafile.mjs'
-      - 'build-plans.toml'
-      - 'private-build-plans.toml'
 
 jobs:
   # Job 1: Generate build matrix and prepare environment
@@ -88,6 +68,7 @@ jobs:
           name: build-matrix
           path: |
             font-*.json
+
   # Job 2: Build unhinted TTF fonts (Stage 1)
   build-unhinted:
     name: Build Unhinted TTF (${{ matrix.batch }})
