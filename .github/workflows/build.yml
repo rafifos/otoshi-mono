@@ -65,7 +65,22 @@ jobs:
       - name: Patch fonts with NerdFonts
         run: |
           mkdir -p dist-nerdfont
-          docker run --rm -v "$PWD/dist:/in:Z" -v "$PWD/dist-nerdfont:/out:Z" nerdfonts/patcher --complete --careful /in
+          # Find all TTF files in the dist directory and patch them individually
+          find dist/ -name "*.ttf" -type f | while read -r font_file; do
+            # Get the relative path from dist/
+            rel_path="${font_file#dist/}"
+            # Create the output directory structure
+            output_dir="dist-nerdfont/$(dirname "$rel_path")"
+            mkdir -p "$output_dir"
+            echo "Patching: $font_file"
+            docker run --rm \
+              -v "$PWD/dist:/in:Z" \
+              -v "$PWD/dist-nerdfont:/out:Z" \
+              nerdfonts/patcher \
+              --complete --careful \
+              --outputdir "/out/$(dirname "$rel_path")" \
+              "/in/$rel_path"
+          done
 
       - name: Upload Original Artifacts
         uses: actions/upload-artifact@v4
