@@ -65,7 +65,7 @@ jobs:
         id: matrix
         run: |
           TEST_TYPE="${{ steps.test-type.outputs.test_type }}"
-          
+
           if [ "$TEST_TYPE" = "quick" ]; then
             # Quick test: Only Regular fonts
             node .github/scripts/generate-test-matrix.js quick > matrix-output.txt
@@ -76,20 +76,20 @@ jobs:
             # Single width: Normal width only, both families
             node .github/scripts/generate-test-matrix.js single-width > matrix-output.txt
           fi
-          
+
           cat matrix-output.txt
-          
+
           # Extract the GitHub Actions outputs
           families=$(grep "families=" matrix-output.txt | cut -d'=' -f2-)
           batches=$(grep "batches=" matrix-output.txt | cut -d'=' -f2-)
-          
+
           echo "families=$families" >> $GITHUB_OUTPUT
           echo "batches=$batches" >> $GITHUB_OUTPUT
-          
+
       - name: Get Font version
         id: version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
-        
+
       - name: Upload matrix files
         uses: actions/upload-artifact@v4
         if: always()
@@ -170,10 +170,10 @@ jobs:
             echo "Error: No batch file found"
             exit 1
           fi
-          
+
           # Read the batch information
           BATCH_DATA=$(cat "$BATCH_FILE" | jq ".[] | select(.batchId == ${{ matrix.batch }})")
-          
+
           echo "Building test batch ${{ matrix.batch }}..."
           echo "$BATCH_DATA" | jq -r '.fonts[].target' | while read target; do
             echo "Building: $target"

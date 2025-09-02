@@ -179,10 +179,10 @@ jobs:
             echo "Error: No batch file found"
             exit 1
           fi
-          
+
           # Read the batch information
           BATCH_DATA=$(cat "$BATCH_FILE" | jq ".[] | select(.batchId == ${{ matrix.batch }})")
-          
+
           echo "Building batch ${{ matrix.batch }}..."
           echo "$BATCH_DATA" | jq -r '.fonts[].target' | while read target; do
             echo "Building: $target"
@@ -317,8 +317,7 @@ jobs:
     if: >
       always() &&
       (github.event.inputs.save_cache == 'true' ||
-       github.event_name == 'schedule' ||
-       github.run_number % 7 == 0)
+       github.event_name == 'schedule')
 
     steps:
       - name: Checkout Repository
