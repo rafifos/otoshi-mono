@@ -96,7 +96,6 @@ jobs:
         with:
           name: test-build-matrix
           path: |
-            .github/font-*.json
             font-*.json
         continue-on-error: true
 
@@ -161,13 +160,13 @@ jobs:
 
       - name: Build test fonts in batch
         run: |
-          # Check if matrix files exist
+          # Check if matrix file exists
           if [ -f "font-batches.json" ]; then
             BATCH_FILE="font-batches.json"
-          elif [ -f ".github/font-batches.json" ]; then
-            BATCH_FILE=".github/font-batches.json"
           else
             echo "Error: No batch file found"
+            echo "Looking for font-batches.json in current directory"
+            ls -la font-*.json || echo "No font-*.json files found"
             exit 1
           fi
 

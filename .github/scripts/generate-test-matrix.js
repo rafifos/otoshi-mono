@@ -121,18 +121,9 @@ function generateTestMatrix(testType = 'quick') {
         console.log(`families=${JSON.stringify(families)}`);
         console.log(`batches=${JSON.stringify(batches.map(b => b.batchId))}`);
 
-        // Try to write to .github directory, fallback to current directory
-        try {
-            if (!fs.existsSync('.github')) {
-                fs.mkdirSync('.github', { recursive: true });
-            }
-            fs.writeFileSync('.github/font-batches.json', JSON.stringify(batches, null, 2));
-            fs.writeFileSync('.github/font-matrix.json', JSON.stringify(fontMatrix, null, 2));
-        } catch (githubDirError) {
-            console.log('Failed to write to .github directory, writing to current directory');
-            fs.writeFileSync('font-batches.json', JSON.stringify(batches, null, 2));
-            fs.writeFileSync('font-matrix.json', JSON.stringify(fontMatrix, null, 2));
-        }
+        // Write to current directory for artifact upload/download consistency
+        fs.writeFileSync('font-batches.json', JSON.stringify(batches, null, 2));
+        fs.writeFileSync('font-matrix.json', JSON.stringify(fontMatrix, null, 2));
 
         return { families, batches: batches.map(b => b.batchId), fontMatrix, batches };
 
