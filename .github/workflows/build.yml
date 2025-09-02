@@ -3,6 +3,15 @@ name: Font Build and Release
 on:
   workflow_dispatch:
     inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'complete'
+        type: choice
+        options:
+        - complete
+        - quick
+        - single-family
       use_persistent_cache:
         description: 'Use persistent cache if available'
         required: false
@@ -16,9 +25,16 @@ on:
   schedule:
     # Save build cache weekly on Sundays at 2 AM UTC
     - cron: '0 2 * * 0'
+  push:
+    branches: [ main ]
+    paths:
+      - 'packages/**'
+      - 'verdafile.mjs'
+      - 'build-plans.toml'
+      - 'private-build-plans.toml'
 
 jobs:
-  # Job 1: Generate build matrix and manage cache
+  # Job 1: Generate build matrix and prepare environment
   setup:
     name: Setup Build Matrix
     runs-on: ubuntu-latest
@@ -26,7 +42,7 @@ jobs:
       families: ${{ steps.matrix.outputs.families }}
       batches: ${{ steps.matrix.outputs.batches }}
       version: ${{ steps.version.outputs.version }}
-      cache_restored: ${{ steps.cache-status.outputs.cache_restored }}
+      build_mode: ${{ steps.build-mode.outputs.build_mode }}
 
     steps:
       - name: Checkout Repository
@@ -40,10 +56,22 @@ jobs:
       - name: Install dependencies for matrix generation
         run: npm install @iarna/toml
 
+      - name: Determine build mode
+        id: build-mode
+        run: |
+          if [ "${{ github.event.inputs.build_mode }}" != "" ]; then
+            echo "build_mode=${{ github.event.inputs.build_mode }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "build_mode=quick" >> $GITHUB_OUTPUT
+          else
+            echo "build_mode=complete" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate font build matrix
         id: matrix
         run: |
-          node .github/scripts/generate-font-matrix.js > matrix-output.txt
+          BUILD_MODE="${{ steps.build-mode.outputs.build_mode }}"
+          node .github/scripts/generate-font-matrix.js "$BUILD_MODE" > matrix-output.txt
           cat matrix-output.txt
 
           # Extract the GitHub Actions outputs
@@ -59,51 +87,84 @@ jobs:
 
       - name: Upload matrix files
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: build-matrix
           path: |
-            .github/font-*.json
             font-*.json
-        continue-on-error: true
-
-      # Try to restore persistent cache if enabled
-      - name: Restore Build Cache
-        id: restore-cache
-        if: github.event.inputs.use_persistent_cache != 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Checking for available build cache..."
-          if ./.github/scripts/manage-cache.sh restore; then
-            echo "cache_restored=true" >> $GITHUB_OUTPUT
-            echo "Build cache restored successfully"
-          else
-            echo "cache_restored=false" >> $GITHUB_OUTPUT
-            echo "No cache available or failed to restore"
-          fi
-
-      - name: Set cache status
-        id: cache-status
-        run: |
-          cache_restored="${{ steps.restore-cache.outputs.cache_restored }}"
-          echo "cache_restored=${cache_restored:-false}" >> $GITHUB_OUTPUT
-
-      - name: Upload restored cache artifacts
-        if: steps.restore-cache.outputs.cache_restored == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: restored-cache
-          path: |
-            .build/
-            packages/*/lib/
-          retention-days: 1
-
-  # Job 2: Build fonts in parallel batches
-  build-fonts:
-    name: Build Fonts (Batch ${{ matrix.batch }})
+  # Job 2: Build unhinted TTF fonts (Stage 1)
+  build-unhinted:
+    name: Build Unhinted TTF (Batch ${{ matrix.batch }})
     runs-on: ubuntu-latest
     needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.setup.outputs.batches) }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache build environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            packages/*/lib
+            packages/font-glyphs/src/**/*.mjs
+            packages/font-otl/src/**/*.mjs
+          key: ${{ runner.os }}-build-env-${{ hashFiles('packages/**', 'verdafile.mjs', '*-build-plans.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-env-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download matrix files
+        uses: actions/download-artifact@v4
+        with:
+          name: build-matrix
+          path: ./
+
+      - name: Build unhinted TTF fonts
+        run: |
+          BATCH_DATA=$(cat font-batches.json | jq ".[] | select(.batchId == ${{ matrix.batch }})")
+          echo "Building unhinted TTF for batch ${{ matrix.batch }}..."
+          echo "$BATCH_DATA" | jq -r '.families[].targets.unhinted' | while read target; do
+            echo "Building: $target"
+            npm run build -- "$target"
+          done
+
+      - name: Upload unhinted TTF artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unhinted-ttf-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: |
+            dist/*/TTF-Unhinted/
+          include-hidden-files: true
+
+  # Job 3: Build hinted TTF fonts (Stage 2)
+  build-hinted:
+    name: Build Hinted TTF (Batch ${{ matrix.batch }})
+    runs-on: ubuntu-latest
+    needs: [setup, build-unhinted]
     strategy:
       fail-fast: false
       matrix:
@@ -123,21 +184,13 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
-      # Standard build cache
-      - name: Cache build artifacts
-        id: build-cache
+      - name: Cache build environment
         uses: actions/cache@v4
         with:
           path: |
@@ -145,18 +198,13 @@ jobs:
             packages/*/lib
             packages/font-glyphs/src/**/*.mjs
             packages/font-otl/src/**/*.mjs
-          key: ${{ runner.os }}-build-cache-${{ hashFiles('packages/**', 'verdafile.mjs', '*-build-plans.toml') }}-batch-${{ matrix.batch }}
-          restore-keys: |
-            ${{ runner.os }}-build-cache-${{ hashFiles('packages/**', 'verdafile.mjs') }}
-            ${{ runner.os }}-build-cache-
+          key: ${{ runner.os }}-build-env-${{ hashFiles('packages/**', 'verdafile.mjs', '*-build-plans.toml') }}
 
-      # Restore persistent cache if standard cache missed
-      - name: Download restored cache artifacts
-        if: steps.build-cache.outputs.cache-hit != 'true' && needs.setup.outputs.cache_restored == 'true'
+      - name: Download unhinted TTF artifacts
         uses: actions/download-artifact@v4
         with:
-          name: restored-cache
-          path: ./
+          name: unhinted-ttf-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: dist/
 
       - name: Install dependencies
         run: npm ci
@@ -166,78 +214,188 @@ jobs:
         with:
           name: build-matrix
           path: ./
-        continue-on-error: true
 
-      - name: Build fonts in batch
+      - name: Build hinted TTF fonts
         run: |
-          # Check if matrix files exist
-          if [ -f "font-batches.json" ]; then
-            BATCH_FILE="font-batches.json"
-          elif [ -f ".github/font-batches.json" ]; then
-            BATCH_FILE=".github/font-batches.json"
-          else
-            echo "Error: No batch file found"
-            exit 1
-          fi
-
-          # Read the batch information
-          BATCH_DATA=$(cat "$BATCH_FILE" | jq ".[] | select(.batchId == ${{ matrix.batch }})")
-
-          echo "Building batch ${{ matrix.batch }}..."
-          echo "$BATCH_DATA" | jq -r '.fonts[].target' | while read target; do
+          BATCH_DATA=$(cat font-batches.json | jq ".[] | select(.batchId == ${{ matrix.batch }})")
+          echo "Building hinted TTF for batch ${{ matrix.batch }}..."
+          echo "$BATCH_DATA" | jq -r '.families[].targets.hinted' | while read target; do
             echo "Building: $target"
             npm run build -- "$target"
           done
 
-      - name: Upload batch artifacts
+      - name: Upload hinted TTF artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fonts-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          name: hinted-ttf-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
           path: |
-            dist/
+            dist/*/TTF/
           include-hidden-files: true
 
-      # Save updated build cache for sharing between batches
-      - name: Upload updated build cache
-        if: matrix.batch == 1  # Only from first batch to avoid conflicts
-        uses: actions/upload-artifact@v4
-        with:
-          name: updated-build-cache-${{ needs.setup.outputs.version }}
-          path: |
-            .build/
-            packages/*/lib/
-          retention-days: 1
-
-  # Job 3: Patch fonts with NerdFonts in parallel
-  patch-fonts:
-    name: Patch Fonts (Batch ${{ matrix.batch }})
+  # Job 4: Build WOFF2 fonts (Stage 3)
+  build-woff2:
+    name: Build WOFF2 (Batch ${{ matrix.batch }})
     runs-on: ubuntu-latest
-    needs: [setup, build-fonts]
+    needs: [setup, build-hinted]
     strategy:
       fail-fast: false
       matrix:
         batch: ${{ fromJson(needs.setup.outputs.batches) }}
 
     steps:
-      - name: Download font batch
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Cache build environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            packages/*/lib
+            packages/font-glyphs/src/**/*.mjs
+            packages/font-otl/src/**/*.mjs
+          key: ${{ runner.os }}-build-env-${{ hashFiles('packages/**', 'verdafile.mjs', '*-build-plans.toml') }}
+
+      - name: Download hinted TTF artifacts
         uses: actions/download-artifact@v4
         with:
-          name: fonts-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          name: hinted-ttf-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: dist/
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download matrix files
+        uses: actions/download-artifact@v4
+        with:
+          name: build-matrix
+          path: ./
+
+      - name: Build WOFF2 fonts
+        run: |
+          BATCH_DATA=$(cat font-batches.json | jq ".[] | select(.batchId == ${{ matrix.batch }})")
+          echo "Building WOFF2 for batch ${{ matrix.batch }}..."
+          echo "$BATCH_DATA" | jq -r '.families[].targets.woff2' | while read target; do
+            echo "Building: $target"
+            npm run build -- "$target"
+          done
+
+      - name: Upload WOFF2 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: woff2-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: |
+            dist/*/WOFF2/
+          include-hidden-files: true
+
+  # Job 5: Build webfonts with CSS (Stage 4)
+  build-webfonts:
+    name: Build Webfonts (Batch ${{ matrix.batch }})
+    runs-on: ubuntu-latest
+    needs: [setup, build-woff2]
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.setup.outputs.batches) }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Cache build environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            packages/*/lib
+            packages/font-glyphs/src/**/*.mjs
+            packages/font-otl/src/**/*.mjs
+          key: ${{ runner.os }}-build-env-${{ hashFiles('packages/**', 'verdafile.mjs', '*-build-plans.toml') }}
+
+      - name: Download WOFF2 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: woff2-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: dist/
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download matrix files
+        uses: actions/download-artifact@v4
+        with:
+          name: build-matrix
+          path: ./
+
+      - name: Build webfonts with CSS
+        run: |
+          BATCH_DATA=$(cat font-batches.json | jq ".[] | select(.batchId == ${{ matrix.batch }})")
+          echo "Building webfonts for batch ${{ matrix.batch }}..."
+          echo "$BATCH_DATA" | jq -r '.families[].targets.webfont' | while read target; do
+            echo "Building: $target"
+            npm run build -- "$target"
+          done
+
+      - name: Upload webfont artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: webfont-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
+          path: |
+            dist/*/
+          include-hidden-files: true
+
+  # Job 6: Create NerdFont patches (hinted TTFs only)
+  patch-fonts:
+    name: Patch Fonts (Batch ${{ matrix.batch }})
+    runs-on: ubuntu-latest
+    needs: [setup, build-webfonts]
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: ${{ fromJson(needs.setup.outputs.batches) }}
+
+    steps:
+      - name: Download webfont batch
+        uses: actions/download-artifact@v4
+        with:
+          name: webfont-batch-${{ matrix.batch }}-${{ needs.setup.outputs.version }}
           path: dist/
 
       - name: Patch fonts with NerdFonts
         run: |
           mkdir -p dist-nerdfont
 
-          # Find all TTF files in this batch and patch them
-          find dist/ -name "*.ttf" -type f | while read -r font_file; do
+          # Find only hinted TTF files (exclude TTF-Unhinted directory) and patch them
+          find dist/ -path "*/TTF/*.ttf" -type f | while read -r font_file; do
             # Get the relative path from dist/
             rel_path="${font_file#dist/}"
             # Create the output directory structure
             output_dir="dist-nerdfont/$(dirname "$rel_path")"
             mkdir -p "$output_dir"
 
-            echo "Patching: $font_file"
+            echo "Patching hinted TTF: $font_file"
             docker run --rm \
               -v "$PWD/dist:/in:Z" \
               -v "$PWD/dist-nerdfont:/out:Z" \
@@ -255,21 +413,21 @@ jobs:
             dist-nerdfont/
           include-hidden-files: true
 
-  # Job 4: Collect and organize all fonts by family
+  # Job 7: Collect and organize all fonts by family
   collect-fonts:
     name: Collect Fonts (${{ matrix.family }})
     runs-on: ubuntu-latest
-    needs: [setup, build-fonts, patch-fonts]
+    needs: [setup, build-webfonts, patch-fonts]
     strategy:
       fail-fast: false
       matrix:
         family: ${{ fromJson(needs.setup.outputs.families) }}
 
     steps:
-      - name: Download all font batches
+      - name: Download all webfont batches
         uses: actions/download-artifact@v4
         with:
-          pattern: fonts-batch-*-${{ needs.setup.outputs.version }}
+          pattern: webfont-batch-*-${{ needs.setup.outputs.version }}
           path: all-fonts/
           merge-multiple: true
 
@@ -309,46 +467,12 @@ jobs:
           path: final-nerdfont/
           include-hidden-files: true
 
-  # Job 5: Save build cache
-  save-cache:
-    name: Save Build Cache
-    runs-on: ubuntu-latest
-    needs: [setup, build-fonts]
-    if: >
-      always() &&
-      (github.event.inputs.save_cache == 'true' ||
-       github.event_name == 'schedule')
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Download updated build cache
-        uses: actions/download-artifact@v4
-        with:
-          name: updated-build-cache-${{ needs.setup.outputs.version }}
-          path: ./
-        continue-on-error: true
-
-      - name: Save build cache
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Saving build cache for future builds..."
-          ./.github/scripts/manage-cache.sh save
-
-      - name: Cleanup old cache files
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Cleaning up old cache files..."
-          ./.github/scripts/manage-cache.sh cleanup
-
-  # Job 6: Create release with all fonts
+  # Job 8: Create release with all fonts
   release:
     name: Create Release
     runs-on: ubuntu-latest
     needs: [setup, collect-fonts]
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
 
@@ -372,18 +496,15 @@ jobs:
 
             This release includes:
             - **Original fonts**: Complete font families with all weights, widths, and slopes
-            - **NerdFont patched**: Same fonts with additional programming icons and symbols
+            - **NerdFont patched**: Hinted TTF fonts with additional programming icons and symbols
 
             ## Font Families
-            - **OtoshiMono**: Proportional spacing variant
-            - **OtoshiTerm**: Terminal/monospace variant
-
-            Both families include 7 widths × 9 weights × 3 slopes = 189 font files each.
+            ${{ join(fromJson(needs.setup.outputs.families), ', ') }}
 
             ## Build Information
-            - Built with parallel processing for faster builds
-            - Build cache used: ${{ needs.setup.outputs.cache_restored }}
-            - Total fonts: 378 individual font files
+            - Build mode: ${{ needs.setup.outputs.build_mode }}
+            - Built with staged caching for efficient builds
+            - All formats included: TTF (hinted/unhinted), WOFF2, and CSS
 
             Built from commit: ${{ github.sha }}
           files: release-artifacts/**/*
