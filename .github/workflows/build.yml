@@ -59,9 +59,13 @@ jobs:
 
       - name: Upload matrix files
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: build-matrix
-          path: .github/font-*.json
+          path: |
+            .github/font-*.json
+            font-*.json
+        continue-on-error: true
 
       # Try to restore persistent cache if enabled
       - name: Restore Build Cache
@@ -161,13 +165,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-matrix
-          path: .github/
+          path: ./
+        continue-on-error: true
 
       - name: Build fonts in batch
         run: |
+          # Check if matrix files exist
+          if [ -f "font-batches.json" ]; then
+            BATCH_FILE="font-batches.json"
+          elif [ -f ".github/font-batches.json" ]; then
+            BATCH_FILE=".github/font-batches.json"
+          else
+            echo "Error: No batch file found"
+            exit 1
+          fi
+          
           # Read the batch information
-          BATCH_DATA=$(cat .github/font-batches.json | jq ".[] | select(.batchId == ${{ matrix.batch }})")
-
+          BATCH_DATA=$(cat "$BATCH_FILE" | jq ".[] | select(.batchId == ${{ matrix.batch }})")
+          
           echo "Building batch ${{ matrix.batch }}..."
           echo "$BATCH_DATA" | jq -r '.fonts[].target' | while read target; do
             echo "Building: $target"

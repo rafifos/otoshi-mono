@@ -100,11 +100,21 @@ function generateFontMatrix() {
         console.log(`batches=${JSON.stringify(batches.map(b => b.batchId))}`);
 
         // Write detailed batch information to files
-        fs.writeFileSync('.github/font-batches.json', JSON.stringify(batches, null, 2));
-        fs.writeFileSync('.github/font-matrix.json', JSON.stringify(fontMatrix, null, 2));
-
-        console.log('\nBatch details written to .github/font-batches.json');
-        console.log('Full matrix written to .github/font-matrix.json');
+        try {
+            if (!fs.existsSync('.github')) {
+                fs.mkdirSync('.github', { recursive: true });
+            }
+            fs.writeFileSync('.github/font-batches.json', JSON.stringify(batches, null, 2));
+            fs.writeFileSync('.github/font-matrix.json', JSON.stringify(fontMatrix, null, 2));
+            console.log('\nBatch details written to .github/font-batches.json');
+            console.log('Full matrix written to .github/font-matrix.json');
+        } catch (githubDirError) {
+            console.log('\nFailed to write to .github directory, writing to current directory');
+            fs.writeFileSync('font-batches.json', JSON.stringify(batches, null, 2));
+            fs.writeFileSync('font-matrix.json', JSON.stringify(fontMatrix, null, 2));
+            console.log('Batch details written to font-batches.json');
+            console.log('Full matrix written to font-matrix.json');
+        }
 
         return { families, batches: batches.map(b => b.batchId), fontMatrix, batches: batches };
 
